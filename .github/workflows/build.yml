@@ -1,0 +1,45 @@
+name: Build KivyMD Invoice App
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Clone repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y git zip unzip openjdk-17-jdk
+        pip install --upgrade pip
+        pip install cython buildozer kivy[base] kivy_deps.sdl2 kivy_deps.glew kivy_deps.gstreamer kivymd
+
+    - name: Set up Buildozer
+      run: |
+        buildozer init  # Idan baka da buildozer.spec
+        sed -i 's/# android.accept_sdk_license = False/android.accept_sdk_license = True/' buildozer.spec
+
+    - name: Build APK
+      run: |
+        buildozer android debug
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: KivyMD-InvoiceApp-APK
+        path: bin/*.apk
